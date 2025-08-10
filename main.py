@@ -5,7 +5,7 @@ from random import randint,choice
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.image=pygame.image.load('player.png').convert_alpha()
+        self.image=pygame.image.load('graphics/player.png').convert_alpha()
         self.image=pygame.transform.rotozoom(self.image,0,0.5)
         self.rect=self.image.get_rect(center=(80,300))
         self.mask = pygame.mask.from_surface(self.image)
@@ -34,11 +34,11 @@ class Object(pygame.sprite.Sprite):
         super().__init__()
         match type:
             case 'tower':
-                self.image=pygame.image.load('obj1.png').convert_alpha()
+                self.image=pygame.image.load('graphics/obj1.png').convert_alpha()
                 self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
                 self.rect=self.image.get_rect(midbottom=(600,randint(650,800)))
             case 'air_balloon':
-                self.image = pygame.image.load('obj2.png').convert_alpha()
+                self.image = pygame.image.load('graphics/obj2.png').convert_alpha()
                 self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
                 self.rect = self.image.get_rect(midtop=(600,randint(50,500)-150))
         self.mask = pygame.mask.from_surface(self.image)
@@ -65,11 +65,11 @@ screen=pygame.display.set_mode((500,600))
 pygame.display.set_caption('FLAPPY BIRD')
 clock=pygame.time.Clock()
 game_active=False
-text_font = pygame.font.Font('Pixeltype.ttf', 50)
+text_font = pygame.font.Font('graphics/Pixeltype.ttf', 50)
 start_time=0
 score=0
 death=randint(2,250)
-Sky_img=pygame.image.load('sky3.png')
+Sky_img=pygame.image.load('graphics/sky3.png')
 Sky_img=pygame.transform.rotozoom(Sky_img,0,0.7)
 
 player=pygame.sprite.GroupSingle()
@@ -83,7 +83,7 @@ game_name_rect = game_name.get_rect(center=(250, 250))
 game_message = text_font.render('Press space to start the exam', False, (0,0,0))
 game_message_rect = game_message.get_rect(center=(250,350 ))
 
-died=pygame.image.load('died.jpeg')
+died=pygame.image.load('graphics/died.jpeg')
 died=pygame.transform.rotozoom(died,0,0.5)
 # Timer
 jump_delay=pygame.USEREVENT+1
