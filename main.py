@@ -124,7 +124,6 @@ while True:
             game_active = coslision()
         
     else:
-
         score_board=text_font.render(f'You flew {score}km and kill {death} people',False,'black',)
         score_board_rect=score_board.get_rect(center=(250,300))
         if score==0:
@@ -136,7 +135,6 @@ while True:
             #screen.blit(died,(0,0))
             screen.blit(score_board,score_board_rect)
     #debuging
-
 
     pygame.display.update()
     clock.tick(60)
