@@ -47,25 +47,58 @@ class Player(pygame.sprite.Sprite):
         self.tilting()
 
 
-class Object(pygame.sprite.Sprite):
-    def __init__(self,type):
+class GameObject(pygame.sprite.Sprite):
+    def __init__(self, kind: str):
         super().__init__()
-        match type:
-            case 'tower':
-                self.image=pygame.image.load('graphics/obj1.png').convert_alpha()
-                self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
-                self.rect=self.image.get_rect(midbottom=(600,randint(650,800)))
-            case 'air_balloon':
-                self.image = pygame.image.load('graphics/obj2.png').convert_alpha()
-                self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
-                self.rect = self.image.get_rect(midtop=(600,randint(50,500)-150))
+        self.kind = kind
+
+        if kind == 'tower':
+            self.image = pygame.image.load('graphics/obj1.png').convert_alpha()
+            self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
+            self.rect = self.image.get_rect(midbottom=(600, randint(650, 800)))
+            self.speed = 5
+            self.destroy_limit_x = -200
+
+        elif kind == 'air_balloon':
+            self.image = pygame.image.load('graphics/obj2.png').convert_alpha()
+            self.image = pygame.transform.rotozoom(self.image, 0, 0.7)
+            self.rect = self.image.get_rect(midtop=(600, randint(50, 500) - 150))
+            self.speed = 5
+            self.destroy_limit_x = -200
+
+        elif kind == 'plane2':
+            self.image = pygame.image.load('graphics/plane2.png').convert_alpha()
+            self.image = pygame.transform.rotozoom(self.image, 0, 0.5)
+            self.image = pygame.transform.flip(self.image, True, False)
+            self.rect = self.image.get_rect(center=(800, randint(100, 500)))
+            self.speed = 10
+            self.destroy_limit_x = -400
+
+        elif kind == 'plane3':
+            self.image = pygame.image.load('graphics/plane3.png').convert_alpha()
+            self.image = pygame.transform.rotozoom(self.image, 0, 0.5)
+            self.image = pygame.transform.flip(self.image, True, False)
+            self.rect = self.image.get_rect(center=(800, randint(100, 500)))
+            self.speed = 10
+            self.destroy_limit_x = -400
+
+        else:
+            self.image = pygame.Surface((1, 1), pygame.SRCALPHA)
+            self.rect = self.image.get_rect(center=(-1000, -1000))
+            self.speed = 0
+            self.destroy_limit_x = -1000
+
         self.mask = pygame.mask.from_surface(self.image)
+
     def destroy(self):
-        if self.rect.x<-200:
+        if self.rect.x < self.destroy_limit_x:
             self.kill()
+
     def update(self):
         self.destroy()
-        self.rect.x -= 5
+        self.rect.x -= self.speed
+
+
 class Sky(pygame.sprite.Sprite):
     def __init__(self,type):
         super().__init__()
@@ -81,8 +114,8 @@ class Sky(pygame.sprite.Sprite):
             self.rect.left=940
 
 # Function
-def coslision():
-    if pygame.sprite.spritecollide(player.sprite,obj_gr,False,pygame.sprite.collide_mask):
+def collision():
+    if pygame.sprite.spritecollide(player.sprite, obj_gr, False, pygame.sprite.collide_mask):
         obj_gr.empty()
         return False
     return True
@@ -127,7 +160,9 @@ crash=pygame.transform.rotozoom(crash,0,0.52)
 jump_delay=pygame.USEREVENT+1
 spawn_timer=pygame.USEREVENT+2
 pygame.time.set_timer(spawn_timer,randint(2000,4000))
-sky_timer=pygame.USEREVENT+3
+moving_obj_timer=pygame.USEREVENT+3
+pygame.time.set_timer(moving_obj_timer,10000)  # 10 seconds = 10000 milliseconds
+sky_timer=pygame.USEREVENT+4
 pygame.time.set_timer(sky_timer,70)
 game_over_time = None
 # Game loop
@@ -141,7 +176,9 @@ while True:
                 player.sprite.can_jump = True
                 pygame.time.set_timer(jump_delay, 0)
             if event.type== spawn_timer:
-                obj_gr.add(Object(choice(['tower','air_balloon'])))
+                obj_gr.add(GameObject(choice(['tower','air_balloon'])))
+            if event.type == moving_obj_timer:
+                obj_gr.add(GameObject(choice(['plane2','plane3'])))
             if event.type == sky_timer:
                 Sky_gr.update()
 
@@ -179,7 +216,7 @@ while True:
         if player.sprite.rect.y > 600 or player.sprite.rect.y < -300:
             game_active = False
         else:
-            game_active = coslision()
+            game_active = collision()
         
     else:
         score_board=text_font.render(f'You flew {score}km and kill {death} people',False,'black',)
