@@ -1,7 +1,7 @@
 import pygame
 from sys import exit
 from random import randint,choice
-
+# Classes
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -34,7 +34,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
         self.can_jump = True
 
-    def angleing(self):
+    def tilting(self):
         if self.angle > -90:
             self.angle -= 1
         self.image = pygame.transform.rotozoom(self.original_image, self.angle, 1)
@@ -44,7 +44,7 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.jump()
         self.earthing()
-        self.angleing()
+        self.tilting()
 
 
 class Object(pygame.sprite.Sprite):
@@ -66,6 +66,21 @@ class Object(pygame.sprite.Sprite):
     def update(self):
         self.destroy()
         self.rect.x -= 5
+class Sky(pygame.sprite.Sprite):
+    def __init__(self,type):
+        super().__init__()
+        self.image = pygame.image.load('graphics/sky4.png')
+        self.image = pygame.transform.rotozoom(self.image, 0, 1)
+        if type == 'sky':
+            self.rect = self.image.get_rect(topleft=(0, -250))
+        if type == 'sky2':
+            self.rect = self.image.get_rect(topleft=(940, -250))
+    def update(self):
+        self.rect.x-=1
+        if self.rect.right<=0:
+            self.rect.left=940
+
+# Function
 def coslision():
     if pygame.sprite.spritecollide(player.sprite,obj_gr,False,pygame.sprite.collide_mask):
         obj_gr.empty()
@@ -77,19 +92,21 @@ def display_score():
     score_rect = score_surf.get_rect(center=(225,20))
     screen.blit(score_surf, score_rect)
     return current_time
-
+# Variables
 pygame.init()
 screen=pygame.display.set_mode((450,600))
-pygame.display.set_caption('FLAPPY BIRD')
+pygame.display.set_caption('PLANE GAME')
 clock=pygame.time.Clock()
 game_active=False
 text_font = pygame.font.Font('graphics/Pixeltype.ttf', 50)
 start_time=0
 score=0
 death=randint(2,250)
-Sky_img=pygame.image.load('graphics/sky3.png')
-Sky_img=pygame.transform.rotozoom(Sky_img,0,0.7)
+# Class create
 
+Sky_gr=pygame.sprite.Group()
+Sky_gr.add(Sky('sky'))
+Sky_gr.add(Sky('sky2'))
 player=pygame.sprite.GroupSingle()
 obj_gr=pygame.sprite.Group()
 player.add(Player())
@@ -104,13 +121,16 @@ game_message_rect = game_message.get_rect(center=(225,150 ))
 ap_background=pygame.image.load('graphics/intro2.png')
 ap_background=pygame.transform.rotozoom(ap_background,0,0.5)
 
-died=pygame.image.load('graphics/died.jpeg')
-died=pygame.transform.rotozoom(died,0,0.52)
+crash=pygame.image.load('graphics/crash.png')
+crash=pygame.transform.rotozoom(crash,0,0.52)
 # Timer
 jump_delay=pygame.USEREVENT+1
 spawn_timer=pygame.USEREVENT+2
-pygame.time.set_timer(spawn_timer,3000)
-
+pygame.time.set_timer(spawn_timer,randint(2000,4000))
+sky_timer=pygame.USEREVENT+3
+pygame.time.set_timer(sky_timer,70)
+game_over_time = None
+# Game loop
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -122,19 +142,35 @@ while True:
                 pygame.time.set_timer(jump_delay, 0)
             if event.type== spawn_timer:
                 obj_gr.add(Object(choice(['tower','air_balloon'])))
+            if event.type == sky_timer:
+                Sky_gr.update()
+
         else:
+            if game_over_time is None:
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    game_active = True
+                    start_time = int(pygame.time.get_ticks() / 1000)
+                    death = randint(2, 250)
+                    obj_gr.empty()
+                    player.sprite.reseting()
+                    game_over_time=pygame.time.get_ticks()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                game_active = True
-                start_time = int(pygame.time.get_ticks()/1000)
-                death = randint(2, 250)
-                obj_gr.empty()
-                player.sprite.reseting()
+                current_time=pygame.time.get_ticks()
+                if current_time-game_over_time>=3000:
+                    game_active = True
+                    start_time = int(pygame.time.get_ticks()/1000)
+                    death = randint(2, 250)
+                    obj_gr.empty()
+                    player.sprite.reseting()
+                    game_over_time = None
 
 
 
 
     if game_active:
-        screen.blit(Sky_img,(0,-300))
+
+        Sky_gr.draw(screen)
+
         score=display_score()
         player.draw(screen)
         player.update()
@@ -147,16 +183,16 @@ while True:
         
     else:
         score_board=text_font.render(f'You flew {score}km and kill {death} people',False,'black',)
-        score_board_rect=score_board.get_rect(center=(225,300))
+        score_board_rect=score_board.get_rect(center=(225,200))
         if score==0:
             screen.blit(ap_background,(0,0))
             screen.blit(game_name,game_name_rect)
             screen.blit(game_message,game_message_rect)
         else:
-            screen.fill('#4181e8')
-            #screen.blit(died,(0,0))
+            screen.blit(crash,(0,-60))
             screen.blit(score_board,score_board_rect)
-    #debuging
+
+    # Debuging
 
     pygame.display.update()
     clock.tick(60)
